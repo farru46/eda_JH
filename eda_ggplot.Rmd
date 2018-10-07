@@ -1,0 +1,241 @@
+---
+title: "Ggplot2"
+author: "Syed Faraz Ali"
+date: "10/6/2018"
+output:
+  html_document:
+    code_folding: show
+    theme: readable
+    toc: true
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+library(ggplot2)
+library(magrittr)
+library(dplyr)
+```
+
+```{r}
+str(mpg)
+```
+
+
+```{r}
+qplot(x = displ, y = hwy, data = mpg)
+```
+
+Modifying aesthetics 
+
+```{r}
+qplot(x = displ, y = hwy, data = mpg, color = drv)
+```
+
+
+Adding a geom
+```{r}
+qplot(x = displ, y = hwy, data = mpg, geom = c("point", "smooth"))
+```
+
+
+Histograms
+
+```{r}
+qplot(x = hwy, data = mpg, fill = drv)
+```
+
+Facets 
+
+```{r}
+qplot(x = displ, y = hwy, data = mpg, facets = . ~ drv)
+```
+
+```{r}
+qplot(x = hwy, data = mpg, facets = drv ~., binwidth = 2)
+```
+
+Reading maacs data 
+
+```{r}
+load("~/Downloads/maacs.Rda")
+maacs %>% head()
+maacs %>% str
+```
+
+Histogram of eNO 
+
+```{r}
+qplot(x = log(eno), data = maacs )
+```
+
+
+Histogram by groups 
+
+```{r}
+qplot(x = log(eno), data = maacs, fill = mopos)
+```
+
+Density smooth 
+
+```{r}
+qplot(x = log(eno), data = maacs, geom = "density")
+qplot(x = log(eno), data = maacs, geom = "density", color = mopos)
+```
+
+Scatterplots 
+
+```{r}
+ggplot(data = maacs, mapping = aes(x = log(pm25), y = log(eno)))+
+        geom_point()
+
+ggplot(data = maacs, mapping = aes(x = log(pm25), y = log(eno), shape = mopos)) + 
+        geom_point()
+
+ggplot(data = maacs, mapping = aes(x = log(pm25), y = log(eno), color = mopos)) + 
+        geom_point()+
+        geom_smooth(method = "lm")
+```
+
+
+Using facets 
+
+```{r}
+gg <- ggplot(data = maacs, mapping = aes(x = log(pm25), y = log(eno))) +
+        geom_point()+
+        geom_smooth(method = "lm")
+        
+plot(gg)
+
+qplot(x = log(pm25), y = log(eno), data = maacs, facets = .~mopos) + 
+        geom_smooth(method = "lm")
+
+
+# gg + facet_wrap(.~mopos)
+```
+
+
+Building up in layers 
+
+```{r}
+load("~/Downloads/maacs (1).Rda")
+head(maacs[,6:8])
+```
+
+Plotting 
+
+```{r}
+load("~/Downloads/maacs (1).Rda")
+g <- ggplot(data = maacs, mapping = aes(x = logpm25, y = NocturnalSympt))
+summary(g)
+plot(g)
+
+p <- g + geom_point()
+plot(p)
+```
+
+Adding more layers : Smooth and facets
+```{r}
+g + geom_point() + geom_smooth()
+g + geom_point() + geom_smooth(method = "lm")
+g + 
+        geom_point()+
+        facet_grid(. ~ bmicat)+
+        geom_smooth(method = "lm")
+```
+
+
+Modifying aesthetics 
+
+```{r}
+g + geom_point(color = "steelblue", size = 4, alpha = 0.5)
+g + geom_point(aes(color = bmicat), size = 4, alpha = 0.5)
+```
+
+Modifying labels 
+
+```{r}
+g +geom_point(aes(color = bmicat)) + 
+        labs(title = "MAACS Cohort")+
+        labs (x = expression("log "* PM[2.5]), y = "Nocturnal Symptoms")
+```
+
+
+Customizing the smooth 
+
+```{r}
+g + geom_point(aes(color = bmicat), size =2, alpha = 0.5)+
+        geom_smooth(size = 4, linetype = 3, method = "lm", se = FALSE )
+```
+
+Changing the theme
+
+```{r}
+g + geom_point(aes(color = bmicat)) + 
+        theme_bw(base_family = "Times")
+```
+
+
+Notes about Axis Limits 
+
+With base plot
+```{r}
+testdat <- data.frame(x = 1:100, y = rnorm(100))
+testdat[50,2] <- 100  # Outlier 
+plot(testdat$x, testdat$y, type = "l", ylim = c(-3,3))
+```
+
+With ggplot 
+
+```{r}
+g <- ggplot(data = testdat, mapping = aes(x = x, y = y))
+g +  geom_line()
+```
+
+Exploring the maacs data again 
+
+```{r}
+load("~/Downloads/maacs (1).Rda")
+maacs %>% head
+
+(cutpoints <- quantile(maacs$logno2_new, seq(0,1,length = 4), na.rm = TRUE))
+
+maacs$no2dec <- cut(maacs$logno2_new,cutpoints) 
+
+levels(maacs$no2dec)
+```
+
+Code for final plot 
+
+```{r}
+g <- ggplot(data = maacs, mapping = aes(x = logpm25, y = NocturnalSympt))
+
+## Add layers
+
+g + geom_point(alpha = 1/3)+
+        facet_wrap(bmicat ~ no2dec, nrow = 2, ncol = 4)+
+        geom_smooth(method = "lm", se = FALSE, col = "steelblue")+
+        theme_bw(base_family = "Avenir", base_size = 10)+
+        labs(x = expression("log " * PM[2.5]))+
+        labs(y = "Nocturnal Symptoms")+
+        labs(title = "MAACS Cohort")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
